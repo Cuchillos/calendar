@@ -46,15 +46,19 @@
       color: #fff;
     }
 
-    /* Borde verde similar al estilo del día actual, pero para vacaciones */
+    /* Estilos para las fechas seleccionadas */
     .vacaciones {
       border: 2px solid green !important;
       border-radius: 50%;
     }
-    /* Borde naranja para días de baja */
     .baja {
       border: 2px solid orange !important;
       border-radius: 50%;
+    }
+
+    /* Asegurar que las fechas sean clickeables */
+    .jsCalendar td {
+      cursor: pointer;
     }
   </style>
 </head>
@@ -72,16 +76,16 @@
   </div>
 
   <script>
-    // 1) Crear el calendario con navegación entre meses
+    // Crear el calendario con navegación entre meses
     var calendar = new jsCalendar("#calendar", new Date(), {
       navigator: true,
       monthFormat: "month YYYY"
     });
 
-    // 2) Variables para modo de selección y almacenamiento de fechas
+    // Variables para el modo de selección y almacenamiento de fechas
     let modoSeleccion = null;
-    let fechasSeleccionadas = {}; // Guardará fechas con sus tipos (vacaciones o baja)
-    
+    let fechasSeleccionadas = {}; // Guarda fechas con su tipo (vacaciones o baja)
+
     const btnVacaciones = document.getElementById("btnVacaciones");
     const btnBaja = document.getElementById("btnBaja");
 
@@ -101,7 +105,7 @@
       modoSeleccion = "baja";
     });
 
-    // 3) Función para seleccionar fechas
+    // Evento para seleccionar fechas al hacer clic
     calendar.onDateClick(function(event, date) {
       if (!modoSeleccion) return; // Si no se ha seleccionado un modo, no hacer nada
 
@@ -113,23 +117,23 @@
         selectedDates.push(dStr);
       }
 
-      // Guardar fechas en el objeto fechasSeleccionadas
+      // Guardar las fechas en el objeto fechasSeleccionadas
       selectedDates.forEach(dStr => {
         fechasSeleccionadas[dStr] = modoSeleccion;
       });
 
-      // Actualizar la vista del calendario
+      // Actualizar la visualización de las fechas
       actualizarEstilosCalendario();
     });
 
-    // 4) Función para actualizar la vista del calendario al cambiar de mes
+    // Función para actualizar las fechas visualmente
     function actualizarEstilosCalendario() {
       // Remover clases previas
       document.querySelectorAll("#calendar td").forEach(td => {
         td.classList.remove("vacaciones", "baja");
       });
 
-      // Recorrer las fechas seleccionadas y aplicar estilos
+      // Recorrer fechas guardadas y aplicar los estilos correctos
       Object.keys(fechasSeleccionadas).forEach(dStr => {
         let cell = document.querySelector("#calendar td[data-date='" + dStr + "']");
         if (cell) {
@@ -142,10 +146,18 @@
       });
     }
 
-    // 5) Actualizar las fechas cuando se cambie de mes
+    // Asegurar que las fechas mantengan su estilo al cambiar de mes
     calendar.onMonthChange(function() {
-      setTimeout(actualizarEstilosCalendario, 50); // Esperar a que se rendericen las nuevas fechas
+      setTimeout(actualizarEstilosCalendario, 50); // Esperar a que las nuevas fechas se rendericen
     });
+
+    // SOLUCIÓN AL PROBLEMA DEL CURSOR:
+    // Se añade un pequeño delay para que el calendario asigne correctamente los eventos de click en las fechas
+    setTimeout(() => {
+      document.querySelectorAll("#calendar td").forEach(td => {
+        td.style.cursor = "pointer"; // Asegurar que las fechas sean seleccionables
+      });
+    }, 100);
   </script>
 </body>
 </html>
