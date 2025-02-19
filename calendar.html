@@ -16,24 +16,20 @@
       margin: 20px;
     }
 
-    /* Contenedor para centrar el calendario */
     .calendar-container {
       display: inline-block;
       position: relative;
     }
 
-    /* Ajuste para el título de mes y flechas de navegación */
     .jsCalendar-title-name {
       font-weight: bold;
       font-size: 1.2em;
     }
 
-    /* Botones superiores */
     .buttons {
       margin-top: 15px;
     }
 
-    /* Estilo para botones */
     button {
       margin: 5px;
       padding: 10px 20px;
@@ -45,18 +41,17 @@
     button:hover {
       background-color: #ddd;
     }
-    /* Botón activo */
     .button-active {
       background-color: #999 !important;
       color: #fff;
     }
 
-    /* Borde verde para vacaciones */
+    /* Borde verde similar al estilo del día actual, pero para vacaciones */
     .vacaciones {
       border: 2px solid green !important;
       border-radius: 50%;
     }
-    /* Borde naranja para baja */
+    /* Borde naranja para días de baja */
     .baja {
       border: 2px solid orange !important;
       border-radius: 50%;
@@ -71,60 +66,44 @@
     <div id="calendar"></div>
   </div>
 
-  <!-- Botones para seleccionar tipo de días -->
   <div class="buttons">
     <button id="btnVacaciones">Seleccionar Vacaciones</button>
     <button id="btnBaja">Seleccionar Días de Baja</button>
   </div>
 
   <script>
-    // 1) CREAR EL CALENDARIO CON NAVEGACIÓN
-    // ------------------------------------
-    // Activamos el modo navegador (flechas y título de mes)
+    // 1) Crear el calendario con navegación entre meses
     var calendar = new jsCalendar("#calendar", new Date(), {
-      navigator: true,       // Muestra flechas de navegación
+      navigator: true,
       monthFormat: "month YYYY"
     });
 
-    // Variable para saber qué botón está activo ("vacaciones" o "baja")
+    // 2) Variables para modo de selección
     let modoSeleccion = null;
-
-    // 2) GESTIONAR LOS BOTONES
-    // ------------------------
-    // Referencias a los botones
     const btnVacaciones = document.getElementById("btnVacaciones");
     const btnBaja = document.getElementById("btnBaja");
 
-    // Función para activar/desactivar estados de los botones
     function activarBoton(boton) {
-      // Desactivar todos
       btnVacaciones.classList.remove("button-active");
       btnBaja.classList.remove("button-active");
-
-      // Activar el botón seleccionado
       boton.classList.add("button-active");
     }
 
-    // Evento al hacer clic en "Seleccionar Vacaciones"
     btnVacaciones.addEventListener("click", function() {
       activarBoton(btnVacaciones);
       modoSeleccion = "vacaciones";
     });
 
-    // Evento al hacer clic en "Seleccionar Días de Baja"
     btnBaja.addEventListener("click", function() {
       activarBoton(btnBaja);
       modoSeleccion = "baja";
     });
 
-    // 3) SELECCIÓN DE FECHAS (onDateClick)
-    // ------------------------------------
-    // Al hacer clic en una fecha, se marcan esa fecha + 6 días siguientes
+    // 3) Función para seleccionar fechas
     calendar.onDateClick(function(event, date) {
-      // Si no hay modo seleccionado, no hacemos nada
-      if (!modoSeleccion) return;
+      if (!modoSeleccion) return; // Si no se ha seleccionado un modo, no hacer nada
 
-      // Calcular las 7 fechas (la seleccionada + 6 siguientes)
+      // Calcular la fecha seleccionada y los 6 días siguientes (total 7 días)
       let selectedDates = [];
       for (let i = 0; i < 7; i++) {
         let newDate = new Date(date);
@@ -132,17 +111,17 @@
         selectedDates.push(newDate);
       }
 
-      // Eliminar cualquier selección previa en el calendario
-      // (esto es opcional, si quieres permitir múltiples selecciones, quita este bloque)
-      let allCells = document.querySelectorAll(".jsCalendar-table tbody td");
-      allCells.forEach(cell => {
+      // Remover cualquier selección previa (solo de la vista actual)
+      let currentCells = document.querySelectorAll("#calendar td.vacaciones, #calendar td.baja");
+      currentCells.forEach(cell => {
         cell.classList.remove("vacaciones", "baja");
       });
 
-      // Aplicar la clase correspondiente a cada una de las 7 fechas
-      selectedDates.forEach(d => {
-        // Obtener la celda del calendario para la fecha "d"
-        let cell = calendar._getCell(d);
+      // Marcar las celdas correspondientes a las fechas seleccionadas
+      selectedDates.forEach(function(d) {
+        let dStr = d.toISOString().split("T")[0]; // Formato YYYY-MM-DD
+        // Buscar la celda con el atributo data-date que coincida
+        let cell = document.querySelector("#calendar td[data-date='" + dStr + "']");
         if (cell) {
           if (modoSeleccion === "vacaciones") {
             cell.classList.add("vacaciones");
@@ -152,6 +131,11 @@
         }
       });
     });
+
+    // (Opcional) Para que la selección se mantenga al cambiar de mes, podrías
+    // guardar las fechas seleccionadas en una variable global y, al cambiar el mes,
+    // volver a aplicar el estilo a las celdas visibles. Eso requeriría un manejo
+    // adicional en el evento onMonthChange.
   </script>
 </body>
 </html>
