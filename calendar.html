@@ -39,26 +39,29 @@
     }
 
     .button-active {
-      background-color: #999 !important;
+      background-color: #666 !important;
       color: #fff;
     }
 
-    /* Estilos para las fechas seleccionadas */
-    .vacaciones {
-      background-color: rgba(0, 255, 0, 0.3) !important; /* Verde translúcido */
-      border: 2px solid green !important;
+    /* Estilos para fechas seleccionadas */
+    .vacaciones, .baja {
       border-radius: 50%;
+      border: 2px solid transparent;
+    }
+
+    .vacaciones {
+      border-color: green !important;
+      background-color: rgba(0, 255, 0, 0.2) !important;
     }
 
     .baja {
-      background-color: rgba(255, 165, 0, 0.3) !important; /* Naranja translúcido */
-      border: 2px solid orange !important;
-      border-radius: 50%;
+      border-color: orange !important;
+      background-color: rgba(255, 165, 0, 0.2) !important;
     }
 
     /* Asegurar que las fechas sean clickeables */
     .jsCalendar td {
-      cursor: pointer;
+      cursor: pointer !important;
     }
   </style>
 </head>
@@ -66,7 +69,6 @@
   <h2>Calendario</h2>
 
   <div class="calendar-container">
-    <!-- El calendario se inyectará aquí -->
     <div id="calendar"></div>
   </div>
 
@@ -76,14 +78,13 @@
   </div>
 
   <script>
-    // Crear el calendario
     var calendar = new jsCalendar("#calendar", new Date(), {
       navigator: true,
       monthFormat: "month YYYY"
     });
 
     let modoSeleccion = null;
-    let fechasSeleccionadas = {}; // Almacena fechas con su estado (vacaciones o baja)
+    let fechasSeleccionadas = {};
 
     const btnVacaciones = document.getElementById("btnVacaciones");
     const btnBaja = document.getElementById("btnBaja");
@@ -104,7 +105,6 @@
       modoSeleccion = "baja";
     });
 
-    // Evento de selección de fechas
     calendar.onDateClick(function(event, date) {
       if (!modoSeleccion) return;
 
@@ -112,45 +112,34 @@
       for (let i = 0; i < 7; i++) {
         let newDate = new Date(date);
         newDate.setDate(date.getDate() + i);
-        let dStr = newDate.toISOString().split("T")[0]; // Formato YYYY-MM-DD
+        let dStr = newDate.toISOString().split("T")[0];
         selectedDates.push(dStr);
       }
 
-      // Guardar en el objeto de fechas seleccionadas
       selectedDates.forEach(dStr => {
         fechasSeleccionadas[dStr] = modoSeleccion;
       });
 
-      // **Aplicar los estilos inmediatamente**
       setTimeout(actualizarEstilosCalendario, 50);
     });
 
-    // Función para actualizar los estilos en el calendario
     function actualizarEstilosCalendario() {
-      document.querySelectorAll("#calendar td").forEach(td => {
-        td.classList.remove("vacaciones", "baja");
-      });
-
-      Object.keys(fechasSeleccionadas).forEach(dStr => {
-        let cell = document.querySelector("#calendar td[data-date='" + dStr + "']");
-        if (cell) {
-          if (fechasSeleccionadas[dStr] === "vacaciones") {
-            cell.classList.add("vacaciones");
-          } else if (fechasSeleccionadas[dStr] === "baja") {
-            cell.classList.add("baja");
-          }
+      calendar._elements.body.querySelectorAll("td").forEach(td => {
+        let dStr = td.dataset.date;
+        if (fechasSeleccionadas[dStr]) {
+          td.classList.add(fechasSeleccionadas[dStr]);
+        } else {
+          td.classList.remove("vacaciones", "baja");
         }
       });
     }
 
-    // Actualizar estilos al cambiar de mes
-    calendar.onMonthChange(function() {
+    calendar.onMonthChange(() => {
       setTimeout(actualizarEstilosCalendario, 50);
     });
 
-    // **Solución definitiva para que las fechas sean seleccionables**
     setTimeout(() => {
-      document.querySelectorAll("#calendar td").forEach(td => {
+      calendar._elements.body.querySelectorAll("td").forEach(td => {
         td.style.cursor = "pointer";
       });
     }, 200);
