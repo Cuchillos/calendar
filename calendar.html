@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendario de Vacaciones</title>
+    <script src="https://gramthanos.github.io/jsCalendar/js/jsCalendar.min.js"></script>
+    <link rel="stylesheet" href="https://gramthanos.github.io/jsCalendar/css/jsCalendar.min.css">
+    <style>
+        body { text-align: center; font-family: Arial, sans-serif; }
+        #calendar { max-width: 300px; margin: auto; }
+        .selected { background-color: #4CAF50 !important; color: white !important; border-radius: 50%; }
+    </style>
+</head>
+<body>
+
+    <h2>Selecciona tus vacaciones</h2>
+    <div id="calendar"></div>
+    <p>Fechas seleccionadas: <span id="selectedDates"></span></p>
+
+    <script>
+        let selectedDates = [];
+
+        // Crear el calendario
+        let calendar = new jsCalendar("#calendar");
+
+        // Manejar clics en las fechas
+        calendar.onDateClick(function(event, date){
+            let dateString = date.toISOString().split('T')[0]; // Formato YYYY-MM-DD
+
+            if (selectedDates.includes(dateString)) {
+                selectedDates = selectedDates.filter(d => d !== dateString); // Eliminar fecha
+            } else {
+                selectedDates.push(dateString); // Agregar fecha
+            }
+
+            // Actualizar la UI
+            document.getElementById("selectedDates").innerText = selectedDates.join(", ");
+            calendar.refresh(); // Refrescar para aplicar estilos
+        });
+
+        // Función para marcar las fechas seleccionadas en verde
+        calendar.refresh = function(){
+            document.querySelectorAll(".jsCalendar tbody td").forEach(td => {
+                if (selectedDates.includes(td.dataset.date)) {
+                    td.classList.add("selected");
+                } else {
+                    td.classList.remove("selected");
+                }
+            });
+        };
+
+        // Enviar fechas a Thunkable
+        function sendDatesToThunkable() {
+            window.location.href = "thunkable://" + selectedDates.join(",");
+        }
+    </script>
+
+    <button onclick="sendDatesToThunkable()">Guardar Fechas</button>
+
+</body>
+</html>
