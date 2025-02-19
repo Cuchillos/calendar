@@ -78,75 +78,84 @@
   </div>
 
   <script>
-    var calendar = new jsCalendar("#calendar", new Date(), {
-      navigator: true,
-      monthFormat: "month YYYY"
-    });
-
-    let modoSeleccion = null;
-    let fechasSeleccionadas = {};
-
-    const btnVacaciones = document.getElementById("btnVacaciones");
-    const btnBaja = document.getElementById("btnBaja");
-
-    function activarBoton(boton) {
-      btnVacaciones.classList.remove("button-active");
-      btnBaja.classList.remove("button-active");
-      boton.classList.add("button-active");
-    }
-
-    btnVacaciones.addEventListener("click", function() {
-      activarBoton(btnVacaciones);
-      modoSeleccion = "vacaciones";
-    });
-
-    btnBaja.addEventListener("click", function() {
-      activarBoton(btnBaja);
-      modoSeleccion = "baja";
-    });
-
-    calendar.onDateClick(function(event, date) {
-      if (!modoSeleccion) return;
-
-      let dStr = date.toISOString().split("T")[0];
-
-      if (modoSeleccion === "vacaciones") {
-        for (let i = 0; i < 7; i++) {
-          let newDate = new Date(date);
-          newDate.setDate(date.getDate() + i);
-          let newDStr = newDate.toISOString().split("T")[0];
-          fechasSeleccionadas[newDStr] = "vacaciones";
-        }
-      } else if (modoSeleccion === "baja") {
-        fechasSeleccionadas[dStr] = "baja";
+      // Función para obtener la fecha en formato YYYY-MM-DD (local)
+      function getLocalDateStr(date) {
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const day = String(date.getDate()).padStart(2, '0');
+          return `${year}-${month}-${day}`;
       }
-
-      console.log("Fechas seleccionadas:", fechasSeleccionadas);
-      actualizarEstilosCalendario();
-    });
-
-    function actualizarEstilosCalendario() {
-      calendar._elements.body.querySelectorAll("td").forEach(td => {
-        let dStr = td.dataset.date;
-        td.classList.remove("vacaciones", "baja");
-
-        if (fechasSeleccionadas[dStr]) {
-          td.classList.add(fechasSeleccionadas[dStr]);
-          console.log(`Aplicando estilo a ${dStr}: ${fechasSeleccionadas[dStr]}`);
-        }
+  
+      var calendar = new jsCalendar("#calendar", new Date(), {
+          navigator: true,
+          monthFormat: "month YYYY"
       });
-    }
-
-    calendar.onMonthChange(() => {
-      console.log("Mes cambiado, aplicando estilos...");
-      actualizarEstilosCalendario();
-    });
-
-    setTimeout(() => {
-      calendar._elements.body.querySelectorAll("td").forEach(td => {
-        td.style.cursor = "pointer";
+  
+      let modoSeleccion = null;
+      let fechasSeleccionadas = {};
+  
+      const btnVacaciones = document.getElementById("btnVacaciones");
+      const btnBaja = document.getElementById("btnBaja");
+  
+      function activarBoton(boton) {
+          btnVacaciones.classList.remove("button-active");
+          btnBaja.classList.remove("button-active");
+          boton.classList.add("button-active");
+      }
+  
+      btnVacaciones.addEventListener("click", function() {
+          activarBoton(btnVacaciones);
+          modoSeleccion = "vacaciones";
       });
-    }, 200);
+  
+      btnBaja.addEventListener("click", function() {
+          activarBoton(btnBaja);
+          modoSeleccion = "baja";
+      });
+  
+      calendar.onDateClick(function(event, date) {
+          if (!modoSeleccion) return;
+  
+          let dStr = getLocalDateStr(date);
+  
+          if (modoSeleccion === "vacaciones") {
+              for (let i = 0; i < 7; i++) {
+                  let newDate = new Date(date);
+                  newDate.setDate(date.getDate() + i);
+                  let newDStr = getLocalDateStr(newDate);
+                  fechasSeleccionadas[newDStr] = "vacaciones";
+              }
+          } else if (modoSeleccion === "baja") {
+              fechasSeleccionadas[dStr] = "baja";
+          }
+  
+          console.log("Fechas seleccionadas:", fechasSeleccionadas);
+          actualizarEstilosCalendario();
+      });
+  
+      function actualizarEstilosCalendario() {
+          calendar._elements.body.querySelectorAll("td").forEach(td => {
+              let dStr = td.dataset.date;
+              td.classList.remove("vacaciones", "baja");
+  
+              if (fechasSeleccionadas[dStr]) {
+                  td.classList.add(fechasSeleccionadas[dStr]);
+                  console.log(`Aplicando estilo a ${dStr}: ${fechasSeleccionadas[dStr]}`);
+              }
+          });
+      }
+  
+      calendar.onMonthChange(() => {
+          console.log("Mes cambiado, aplicando estilos...");
+          actualizarEstilosCalendario();
+      });
+  
+      // Inicializar cursor (no necesario si ya está en CSS)
+      setTimeout(() => {
+          calendar._elements.body.querySelectorAll("td").forEach(td => {
+              td.style.cursor = "pointer";
+          });
+      }, 200);
   </script>
 </body>
 </html>
