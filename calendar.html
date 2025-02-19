@@ -78,8 +78,10 @@
       monthFormat: "month YYYY"
     });
 
-    // 2) Variables para modo de selección
+    // 2) Variables para modo de selección y almacenamiento de fechas
     let modoSeleccion = null;
+    let fechasSeleccionadas = {}; // Guardará fechas con sus tipos (vacaciones o baja)
+    
     const btnVacaciones = document.getElementById("btnVacaciones");
     const btnBaja = document.getElementById("btnBaja");
 
@@ -103,39 +105,47 @@
     calendar.onDateClick(function(event, date) {
       if (!modoSeleccion) return; // Si no se ha seleccionado un modo, no hacer nada
 
-      // Calcular la fecha seleccionada y los 6 días siguientes (total 7 días)
       let selectedDates = [];
       for (let i = 0; i < 7; i++) {
         let newDate = new Date(date);
         newDate.setDate(date.getDate() + i);
-        selectedDates.push(newDate);
+        let dStr = newDate.toISOString().split("T")[0]; // Formato YYYY-MM-DD
+        selectedDates.push(dStr);
       }
 
-      // Remover cualquier selección previa (solo de la vista actual)
-      let currentCells = document.querySelectorAll("#calendar td.vacaciones, #calendar td.baja");
-      currentCells.forEach(cell => {
-        cell.classList.remove("vacaciones", "baja");
+      // Guardar fechas en el objeto fechasSeleccionadas
+      selectedDates.forEach(dStr => {
+        fechasSeleccionadas[dStr] = modoSeleccion;
       });
 
-      // Marcar las celdas correspondientes a las fechas seleccionadas
-      selectedDates.forEach(function(d) {
-        let dStr = d.toISOString().split("T")[0]; // Formato YYYY-MM-DD
-        // Buscar la celda con el atributo data-date que coincida
+      // Actualizar la vista del calendario
+      actualizarEstilosCalendario();
+    });
+
+    // 4) Función para actualizar la vista del calendario al cambiar de mes
+    function actualizarEstilosCalendario() {
+      // Remover clases previas
+      document.querySelectorAll("#calendar td").forEach(td => {
+        td.classList.remove("vacaciones", "baja");
+      });
+
+      // Recorrer las fechas seleccionadas y aplicar estilos
+      Object.keys(fechasSeleccionadas).forEach(dStr => {
         let cell = document.querySelector("#calendar td[data-date='" + dStr + "']");
         if (cell) {
-          if (modoSeleccion === "vacaciones") {
+          if (fechasSeleccionadas[dStr] === "vacaciones") {
             cell.classList.add("vacaciones");
-          } else if (modoSeleccion === "baja") {
+          } else if (fechasSeleccionadas[dStr] === "baja") {
             cell.classList.add("baja");
           }
         }
       });
-    });
+    }
 
-    // (Opcional) Para que la selección se mantenga al cambiar de mes, podrías
-    // guardar las fechas seleccionadas en una variable global y, al cambiar el mes,
-    // volver a aplicar el estilo a las celdas visibles. Eso requeriría un manejo
-    // adicional en el evento onMonthChange.
+    // 5) Actualizar las fechas cuando se cambie de mes
+    calendar.onMonthChange(function() {
+      setTimeout(actualizarEstilosCalendario, 50); // Esperar a que se rendericen las nuevas fechas
+    });
   </script>
 </body>
 </html>
