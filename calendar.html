@@ -108,34 +108,38 @@
     calendar.onDateClick(function(event, date) {
       if (!modoSeleccion) return;
 
-      let selectedDates = [];
-      for (let i = 0; i < 7; i++) {
-        let newDate = new Date(date);
-        newDate.setDate(date.getDate() + i);
-        let dStr = newDate.toISOString().split("T")[0];
-        selectedDates.push(dStr);
+      let dStr = date.toISOString().split("T")[0];
+
+      if (modoSeleccion === "vacaciones") {
+        for (let i = 0; i < 7; i++) {
+          let newDate = new Date(date);
+          newDate.setDate(date.getDate() + i);
+          let newDStr = newDate.toISOString().split("T")[0];
+          fechasSeleccionadas[newDStr] = "vacaciones";
+        }
+      } else if (modoSeleccion === "baja") {
+        fechasSeleccionadas[dStr] = "baja";
       }
 
-      selectedDates.forEach(dStr => {
-        fechasSeleccionadas[dStr] = modoSeleccion;
-      });
-
-      setTimeout(actualizarEstilosCalendario, 50);
+      console.log("Fechas seleccionadas:", fechasSeleccionadas);
+      actualizarEstilosCalendario();
     });
 
     function actualizarEstilosCalendario() {
       calendar._elements.body.querySelectorAll("td").forEach(td => {
         let dStr = td.dataset.date;
+        td.classList.remove("vacaciones", "baja");
+
         if (fechasSeleccionadas[dStr]) {
           td.classList.add(fechasSeleccionadas[dStr]);
-        } else {
-          td.classList.remove("vacaciones", "baja");
+          console.log(`Aplicando estilo a ${dStr}: ${fechasSeleccionadas[dStr]}`);
         }
       });
     }
 
     calendar.onMonthChange(() => {
-      setTimeout(actualizarEstilosCalendario, 50);
+      console.log("Mes cambiado, aplicando estilos...");
+      actualizarEstilosCalendario();
     });
 
     setTimeout(() => {
