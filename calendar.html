@@ -57,7 +57,7 @@
             margin: auto;
         }
 
-        /* 🔹 Vacaciones (Fondo Verde) */
+        /* Vacaciones (Fondo Verde) */
         .vacaciones {
             background: rgba(39, 174, 96, 0.25) !important;
             border: 2px solid #27ae60 !important;
@@ -82,9 +82,10 @@
         let selecciones = { vacaciones: new Set() };
         let diasVacacionesRestantes = 0;
         let nombreTrabajador = "Trabajador";
+        let userStatus = 'worker'; // Estado del usuario (worker/admin)
 
         const formatDate = (date) => {
-            date.setHours(12, 0, 0, 0); // Ajustar la fecha para evitar desfases
+            date.setHours(12, 0, 0, 0); // Normalizar hora
             return date.toISOString().split('T')[0];
         };
 
@@ -104,16 +105,12 @@
             dateClick: (info) => {
                 if (!modoSeleccion) return;
                 let fecha = new Date(info.date);
-                
                 fecha.setHours(12, 0, 0, 0);
-                
                 let fechaStr = formatDate(fecha);
 
-                // 🔴 Mostrar Confirmación
                 let confirmacion = confirm(`¿Deseas marcar como Vacaciones el día ${fechaStr}?`);
-                if (!confirmacion) return; // Si el usuario cancela, no hace cambios
+                if (!confirmacion) return;
 
-                // 🔥 Modo Vacaciones: No se pueden quitar
                 if (!selecciones.vacaciones.has(fechaStr)) {
                     if (selecciones.vacaciones.size >= diasVacacionesRestantes) {
                         alert(`Límite de ${diasVacacionesRestantes} días alcanzado`);
@@ -125,6 +122,22 @@
                 actualizarDiasRestantes();
                 actualizarCalendario();
                 sincronizarConThunkable();
+            },
+            eventClick: (info) => {
+                // Solo admins pueden eliminar fechas
+                if (userStatus !== 'admin') return;
+                
+                const fecha = info.event.start;
+                const fechaStr = formatDate(fecha);
+                
+                const confirmacion = confirm(`¿Deseas eliminar la fecha ${fechaStr} de vacaciones?`);
+                if (confirmacion) {
+                    selecciones.vacaciones.delete(fechaStr);
+                    actualizarDiasRestantes();
+                    actualizarCalendario();
+                    sincronizarConThunkable();
+                }
+                info.jsEvent.preventDefault();
             }
         });
 
@@ -165,6 +178,7 @@
                     nombreTrabajador = datos.nombre || "Trabajador";
                     diasVacacionesRestantes = datos.diasRestantes || 0;
                     selecciones.vacaciones = new Set(datos.vacaciones || []);
+                    userStatus = datos.status || 'worker'; // Recibir estado de usuario
 
                     document.getElementById('nombreTrabajador').textContent = `Bienvenido, ${nombreTrabajador}`;
                     actualizarDiasRestantes();
