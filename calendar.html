@@ -4,9 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Calendario Laboral - Gestión de Vacaciones</title>
-    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css' rel='stylesheet' />
-    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js'></script>
-    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales/es.min.js'></script>
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales/es.min.js"></script>
+    <script src="https://thunkable.github.io/webviewer-extension/thunkableWebviewerExtension.js"></script>
     
     <style>
         :root {
@@ -14,37 +15,29 @@
             --vacaciones-color: #27ae60;
             --bajas-color: #e67e22;
             --error-color: #e74c3c;
-            --hover-effect: brightness(0.95);
         }
-
         body {
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            font-family: 'Segoe UI', system-ui, sans-serif;
             margin: 20px auto;
             max-width: 1000px;
             padding: 20px;
             background: #f8f9fa;
         }
-
         .header {
             text-align: center;
             margin-bottom: 30px;
         }
-
         .nombre-trabajador {
             font-size: 1.5em;
             font-weight: bold;
             color: var(--primary-color);
-            margin-bottom: 10px;
         }
-
         .control-panel {
             display: flex;
             gap: 15px;
             justify-content: center;
             margin-bottom: 25px;
-            flex-wrap: wrap;
         }
-
         .mode-button {
             padding: 12px 25px;
             border: none;
@@ -54,91 +47,13 @@
             transition: all 0.3s ease;
             min-width: 160px;
         }
-
         #vacacionesBtn { background: var(--vacaciones-color); color: white; }
         #bajaBtn { background: var(--bajas-color); color: white; }
-
         #calendar {
             background: white;
             border-radius: 12px;
             box-shadow: 0 8px 30px rgba(0,0,0,0.12);
             padding: 20px;
-        }
-
-        .legend {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-            margin: 20px 0;
-            font-size: 0.9em;
-        }
-
-        .color-box {
-            display: inline-block;
-            width: 15px;
-            height: 15px;
-            border-radius: 3px;
-            margin-right: 5px;
-        }
-
-        .dias-restantes {
-            text-align: center;
-            margin: 15px 0;
-            font-size: 1.2em;
-            font-weight: bold;
-            color: var(--primary-color);
-        }
-
-        .fc-daygrid-day-frame {
-            position: relative;
-            transition: all 0.2s !important;
-            border-radius: 8px !important;
-            margin: 2px;
-        }
-
-        .vacaciones .fc-daygrid-day-frame {
-            background: linear-gradient(135deg, rgba(39, 174, 96, 0.15), rgba(39, 174, 96, 0.25)) !important;
-            border: 2px solid var(--vacaciones-color) !important;
-            box-shadow: 0 3px 8px rgba(39, 174, 96, 0.2);
-            animation: pulseSelect 0.4s ease-out;
-        }
-
-        .baja .fc-daygrid-day-frame {
-            background: linear-gradient(135deg, rgba(230, 126, 34, 0.15), rgba(230, 126, 34, 0.25)) !important;
-            border: 2px solid var(--bajas-color) !important;
-            box-shadow: 0 3px 8px rgba(230, 126, 34, 0.2);
-            animation: pulseSelect 0.4s ease-out;
-        }
-
-        .conflicto .fc-daygrid-day-frame {
-            background: repeating-linear-gradient(
-                45deg,
-                rgba(231, 76, 60, 0.1),
-                rgba(231, 76, 60, 0.1) 10px,
-                rgba(231, 76, 60, 0.05) 10px,
-                rgba(231, 76, 60, 0.05) 20px
-            ) !important;
-            border: 2px dashed #e74c3c !important;
-        }
-
-        @keyframes pulseSelect {
-            0% { transform: scale(1); }
-            50% { transform: scale(0.98); }
-            100% { transform: scale(1); }
-        }
-
-        @media (max-width: 600px) {
-            body {
-                padding: 10px;
-            }
-            
-            #calendar {
-                padding: 5px;
-            }
-            
-            .mode-button {
-                width: 100%;
-            }
         }
     </style>
 </head>
@@ -146,9 +61,7 @@
     <div class="header">
         <div class="nombre-trabajador" id="nombreTrabajador">Bienvenido, [Nombre]</div>
         <h1>📅 Gestor de Vacaciones</h1>
-        <div class="dias-restantes">
-            Días restantes: <span id="diasRestantes">30</span>
-        </div>
+        <div class="dias-restantes">Días restantes: <span id="diasRestantes">30</span></div>
     </div>
 
     <div class="control-panel">
@@ -156,32 +69,20 @@
         <button id="bajaBtn" class="mode-button">🏥 Baja Médica</button>
     </div>
 
-    <div class="legend">
-        <div><span class="color-box" style="background: var(--vacaciones-color)"></span>Vacaciones</div>
-        <div><span class="color-box" style="background: var(--bajas-color)"></span>Baja Médica</div>
-        <div><span class="color-box" style="background: var(--error-color)"></span>Conflicto</div>
-    </div>
-
     <div id="calendar"></div>
 
     <script>
         let modoSeleccion = null;
-        const selecciones = {
-            vacaciones: new Set(),
-            baja: new Set()
-        };
+        let selecciones = { vacaciones: new Set(), baja: new Set() };
         let diasVacacionesRestantes = 30;
         let nombreTrabajador = "Trabajador";
 
-        // Formateador de fechas local
-        const formatDate = date => date.toISOString().split('T')[0];
+        const formatDate = (date) => date.toISOString().split('T')[0];
 
-        // Actualizar días restantes
         function actualizarDiasRestantes() {
             document.getElementById('diasRestantes').textContent = diasVacacionesRestantes - selecciones.vacaciones.size;
         }
 
-        // Calendario
         const calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
             initialView: 'dayGridMonth',
             locale: 'es',
@@ -194,68 +95,25 @@
             dateClick: (info) => {
                 if (!modoSeleccion) return;
 
-                const fecha = new Date(info.date);
-                const procesarFecha = (fecha, modo) => {
-                    const fechaStr = formatDate(fecha);
-                    
-                    // Validar conflictos
-                    if ((modo === 'baja' && selecciones.vacaciones.has(fechaStr)) ||
-                        (modo === 'vacaciones' && selecciones.baja.has(fechaStr))) {
-                        info.dayEl.classList.add('conflicto');
-                        setTimeout(() => info.dayEl.classList.remove('conflicto'), 1000);
-                        return false;
-                    }
-                    
-                    if (selecciones[modo].has(fechaStr)) {
-                        selecciones[modo].delete(fechaStr);
-                        calendar.getEventById(fechaStr)?.remove();
-                    } else {
-                        if (modo === 'vacaciones' && (selecciones.vacaciones.size + 7) > diasVacacionesRestantes) {
-                            alert(`Límite de ${diasVacacionesRestantes} días alcanzado`);
-                            return false;
-                        }
-                        
-                        selecciones[modo].add(fechaStr);
-                        calendar.addEvent({
-                            id: fechaStr,
-                            title: modo === 'vacaciones' ? 'Vacaciones' : 'Baja',
-                            start: fecha,
-                            allDay: true,
-                            className: modo
-                        });
-                    }
-                    return true;
-                };
-
-                // Procesar selección
-                if (modoSeleccion === 'vacaciones') {
-                    const initialSize = selecciones.vacaciones.size;
-                    for (let i = 0; i < 7; i++) {
-                        const newDate = new Date(fecha);
-                        newDate.setDate(fecha.getDate() + i);
-                        if (!procesarFecha(newDate, 'vacaciones')) break;
-                    }
-                    if (selecciones.vacaciones.size !== initialSize) {
-                        actualizarDiasRestantes();
-                    }
+                const fechaStr = formatDate(info.date);
+                
+                if (selecciones[modoSeleccion].has(fechaStr)) {
+                    selecciones[modoSeleccion].delete(fechaStr);
                 } else {
-                    procesarFecha(fecha, 'baja');
-                }
-
-                // Comunicar con Thunkable
-                window.parent.postMessage({
-                    tipo: 'actualizacionCalendario',
-                    datos: {
-                        vacaciones: Array.from(selecciones.vacaciones),
-                        baja: Array.from(selecciones.baja)
+                    if (modoSeleccion === 'vacaciones' && selecciones.vacaciones.size >= diasVacacionesRestantes) {
+                        alert(`Límite de ${diasVacacionesRestantes} días alcanzado`);
+                        return;
                     }
-                }, '*');
+                    selecciones[modoSeleccion].add(fechaStr);
+                }
+                
+                actualizarDiasRestantes();
+                enviarDatosAThunkable();
             }
         });
 
         calendar.render();
 
-        // Control de botones
         document.querySelectorAll('.mode-button').forEach(btn => {
             btn.addEventListener('click', () => {
                 document.querySelectorAll('.mode-button').forEach(b => b.style.opacity = '0.6');
@@ -264,17 +122,35 @@
             });
         });
 
-        // Cargar desde Thunkable
-        window.cargarDatos = (datos) => {
-            nombreTrabajador = datos.nombre || "Trabajador";
-            diasVacacionesRestantes = datos.diasRestantes || 30;
-            selecciones.vacaciones = new Set(datos.vacaciones || []);
-            selecciones.baja = new Set(datos.baja || []);
+        function enviarDatosAThunkable() {
+            const datos = {
+                nombre: nombreTrabajador,
+                diasRestantes: diasVacacionesRestantes - selecciones.vacaciones.size,
+                vacaciones: Array.from(selecciones.vacaciones),
+                baja: Array.from(selecciones.baja)
+            };
 
-            document.getElementById('nombreTrabajador').textContent = `Bienvenido, ${nombreTrabajador}`;
-            actualizarDiasRestantes();
-            calendar.refetchEvents();
-        };
+            if (typeof ThunkableWebviewerExtension !== "undefined") {
+                ThunkableWebviewerExtension.postMessage(JSON.stringify(datos));
+            }
+        }
+
+        if (typeof ThunkableWebviewerExtension !== "undefined") {
+            ThunkableWebviewerExtension.receiveMessage(function (message) {
+                try {
+                    const datos = JSON.parse(message);
+                    nombreTrabajador = datos.nombre || "Trabajador";
+                    diasVacacionesRestantes = datos.diasRestantes || 30;
+                    selecciones.vacaciones = new Set(datos.vacaciones || []);
+                    selecciones.baja = new Set(datos.baja || []);
+
+                    document.getElementById('nombreTrabajador').textContent = `Bienvenido, ${nombreTrabajador}`;
+                    actualizarDiasRestantes();
+                } catch (e) {
+                    console.error("Error al procesar mensaje de Thunkable:", e);
+                }
+            });
+        }
     </script>
 </body>
 </html>
