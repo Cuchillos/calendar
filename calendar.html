@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Calendario Laboral - Gestión de Vacaciones</title>
-    
+
     <!-- FullCalendar CSS y JS -->
     <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
@@ -17,8 +17,6 @@
         :root {
             --primary-color: #2c3e50;
             --vacaciones-color: #27ae60;
-            --bajas-color: #e67e22;
-            --error-color: #e74c3c;
         }
         body {
             font-family: 'Segoe UI', sans-serif;
@@ -38,7 +36,6 @@
         }
         .control-panel {
             display: flex;
-            gap: 15px;
             justify-content: center;
             margin-bottom: 25px;
         }
@@ -51,7 +48,6 @@
             min-width: 160px;
         }
         #vacacionesBtn { background: var(--vacaciones-color); color: white; }
-        #bajaBtn { background: var(--bajas-color); color: white; }
         #calendar {
             background: white;
             border-radius: 12px;
@@ -60,21 +56,12 @@
             max-width: 900px;
             margin: auto;
         }
-        
+
         /* 🔹 Vacaciones (Fondo Verde) */
-        .fc-daygrid-day.vacaciones {
-            background: rgba(39, 174, 96, 0.25);
-            border: 2px solid #27ae60;
-            box-shadow: 0 3px 8px rgba(39, 174, 96, 0.2);
+        .vacaciones {
+            background: rgba(39, 174, 96, 0.25) !important;
+            border: 2px solid #27ae60 !important;
         }
-        
-        /* 🔹 Baja Médica (Fondo Naranja) */
-        .fc-daygrid-day.baja {
-            background: rgba(230, 126, 34, 0.25);
-            border: 2px solid #e67e22;
-            box-shadow: 0 3px 8px rgba(230, 126, 34, 0.2);
-        }
-        
     </style>
 </head>
 <body>
@@ -86,18 +73,20 @@
 
     <div class="control-panel">
         <button id="vacacionesBtn" class="mode-button">🏖️ Vacaciones</button>
-        <button id="bajaBtn" class="mode-button">🏥 Baja Médica</button>
     </div>
 
     <div id="calendar"></div>
 
     <script>
         let modoSeleccion = null;
-        let selecciones = { vacaciones: new Set(), baja: new Set() };
+        let selecciones = { vacaciones: new Set() };
         let diasVacacionesRestantes = 30;
         let nombreTrabajador = "Trabajador";
 
-        const formatDate = (date) => date.toISOString().split('T')[0];
+        const formatDate = (date) => {
+            date.setHours(12, 0, 0, 0); // Ajustar la fecha para evitar desfases
+            return date.toISOString().split('T')[0];
+        };
 
         function actualizarDiasRestantes() {
             document.getElementById('diasRestantes').textContent = diasVacacionesRestantes - selecciones.vacaciones.size;
@@ -114,58 +103,54 @@
             },
             dateClick: (info) => {
                 if (!modoSeleccion) return;
-                const fechaStr = formatDate(info.date);
+                let fecha = new Date(info.date);
+                
+                fecha.setHours(12, 0, 0, 0);
+                
+                let fechaStr = formatDate(fecha);
 
-                if (selecciones[modoSeleccion].has(fechaStr)) {
-                    selecciones[modoSeleccion].delete(fechaStr);
-                } else {
-                    if (modoSeleccion === 'vacaciones' && selecciones.vacaciones.size >= diasVacacionesRestantes) {
+                // 🔴 Mostrar Confirmación
+                let confirmacion = confirm(`¿Deseas marcar como Vacaciones el día ${fechaStr}?`);
+                if (!confirmacion) return; // Si el usuario cancela, no hace cambios
+
+                // 🔥 Modo Vacaciones: No se pueden quitar
+                if (!selecciones.vacaciones.has(fechaStr)) {
+                    if (selecciones.vacaciones.size >= diasVacacionesRestantes) {
                         alert(`Límite de ${diasVacacionesRestantes} días alcanzado`);
                         return;
                     }
-                    selecciones[modoSeleccion].add(fechaStr);
+                    selecciones.vacaciones.add(fechaStr);
                 }
-                
+
                 actualizarDiasRestantes();
-                aplicarEstilos();
+                actualizarCalendario();
                 sincronizarConThunkable();
             }
         });
 
         calendar.render();
 
-        document.querySelectorAll('.mode-button').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.mode-button').forEach(b => b.style.opacity = '0.6');
-                btn.style.opacity = '1';
-                modoSeleccion = btn.id.replace('Btn', '');
-            });
+        document.getElementById('vacacionesBtn').addEventListener('click', () => {
+            modoSeleccion = "vacaciones";
         });
 
-        function aplicarEstilos() {
-            // 🔥 Limpiar estilos previos
-            document.querySelectorAll('.fc-daygrid-day').forEach(cell => {
-                cell.classList.remove('vacaciones', 'baja');
-            });
-
-            // 🔥 Aplicar clases de estilos a las fechas seleccionadas
+        function actualizarCalendario() {
+            calendar.removeAllEvents();
             selecciones.vacaciones.forEach(fecha => {
-                let cell = document.querySelector(`[data-date="${fecha}"]`);
-                if (cell) cell.classList.add('vacaciones');
-            });
-
-            selecciones.baja.forEach(fecha => {
-                let cell = document.querySelector(`[data-date="${fecha}"]`);
-                if (cell) cell.classList.add('baja');
+                calendar.addEvent({
+                    id: fecha,
+                    start: fecha,
+                    allDay: true,
+                    className: "vacaciones"
+                });
             });
         }
-        
+
         function sincronizarConThunkable() {
             const datos = {
                 nombre: nombreTrabajador,
                 diasRestantes: diasVacacionesRestantes - selecciones.vacaciones.size,
-                vacaciones: Array.from(selecciones.vacaciones),
-                baja: Array.from(selecciones.baja)
+                vacaciones: Array.from(selecciones.vacaciones)
             };
 
             if (typeof ThunkableWebviewerExtension !== "undefined") {
@@ -180,12 +165,10 @@
                     nombreTrabajador = datos.nombre || "Trabajador";
                     diasVacacionesRestantes = datos.diasRestantes || 30;
                     selecciones.vacaciones = new Set(datos.vacaciones || []);
-                    selecciones.baja = new Set(datos.baja || []);
 
                     document.getElementById('nombreTrabajador').textContent = `Bienvenido, ${nombreTrabajador}`;
                     actualizarDiasRestantes();
-                    aplicarEstilos();
-
+                    actualizarCalendario();
                 } catch (e) {
                     console.error("Error al procesar mensaje de Thunkable:", e);
                 }
