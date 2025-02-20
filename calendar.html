@@ -4,11 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Calendario Laboral - Gestión de Vacaciones</title>
+    
+    <!-- FullCalendar CSS y JS -->
     <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales/es.min.js"></script>
+
+    <!-- Thunkable Web Viewer Extension -->
     <script src="https://thunkable.github.io/webviewer-extension/thunkableWebviewerExtension.js"></script>
-    
+
     <style>
         :root {
             --primary-color: #2c3e50;
@@ -17,14 +21,14 @@
             --error-color: #e74c3c;
         }
         body {
-            font-family: 'Segoe UI', system-ui, sans-serif;
+            font-family: 'Segoe UI', sans-serif;
             margin: 20px auto;
             max-width: 1000px;
             padding: 20px;
             background: #f8f9fa;
+            text-align: center;
         }
         .header {
-            text-align: center;
             margin-bottom: 30px;
         }
         .nombre-trabajador {
@@ -44,7 +48,6 @@
             border-radius: 8px;
             cursor: pointer;
             font-weight: 600;
-            transition: all 0.3s ease;
             min-width: 160px;
         }
         #vacacionesBtn { background: var(--vacaciones-color); color: white; }
@@ -54,6 +57,8 @@
             border-radius: 12px;
             box-shadow: 0 8px 30px rgba(0,0,0,0.12);
             padding: 20px;
+            max-width: 900px;
+            margin: auto;
         }
     </style>
 </head>
@@ -61,7 +66,7 @@
     <div class="header">
         <div class="nombre-trabajador" id="nombreTrabajador">Bienvenido, [Nombre]</div>
         <h1>📅 Gestor de Vacaciones</h1>
-        <div class="dias-restantes">Días restantes: <span id="diasRestantes">30</span></div>
+        <div>Días restantes: <span id="diasRestantes">30</span></div>
     </div>
 
     <div class="control-panel">
@@ -94,9 +99,8 @@
             },
             dateClick: (info) => {
                 if (!modoSeleccion) return;
-
                 const fechaStr = formatDate(info.date);
-                
+
                 if (selecciones[modoSeleccion].has(fechaStr)) {
                     selecciones[modoSeleccion].delete(fechaStr);
                 } else {
@@ -108,7 +112,7 @@
                 }
                 
                 actualizarDiasRestantes();
-                enviarDatosAThunkable();
+                sincronizarConThunkable();
             }
         });
 
@@ -122,7 +126,7 @@
             });
         });
 
-        function enviarDatosAThunkable() {
+        function sincronizarConThunkable() {
             const datos = {
                 nombre: nombreTrabajador,
                 diasRestantes: diasVacacionesRestantes - selecciones.vacaciones.size,
@@ -146,6 +150,28 @@
 
                     document.getElementById('nombreTrabajador').textContent = `Bienvenido, ${nombreTrabajador}`;
                     actualizarDiasRestantes();
+
+                    calendar.removeAllEvents();
+                    datos.vacaciones.forEach(fecha => {
+                        calendar.addEvent({
+                            id: fecha,
+                            title: "Vacaciones",
+                            start: fecha,
+                            allDay: true,
+                            className: "vacaciones"
+                        });
+                    });
+
+                    datos.baja.forEach(fecha => {
+                        calendar.addEvent({
+                            id: fecha,
+                            title: "Baja Médica",
+                            start: fecha,
+                            allDay: true,
+                            className: "baja"
+                        });
+                    });
+
                 } catch (e) {
                     console.error("Error al procesar mensaje de Thunkable:", e);
                 }
