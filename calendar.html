@@ -143,16 +143,22 @@
             ThunkableWebviewerExtension.receiveMessage(function (message) {
                 try {
                     const datos = JSON.parse(message);
+        
+                    // Actualizar variables globales
                     nombreTrabajador = datos.nombre || "Trabajador";
                     diasVacacionesRestantes = datos.diasRestantes || 30;
                     selecciones.vacaciones = new Set(datos.vacaciones || []);
                     selecciones.baja = new Set(datos.baja || []);
-
+        
+                    // Actualizar interfaz de usuario
                     document.getElementById('nombreTrabajador').textContent = `Bienvenido, ${nombreTrabajador}`;
                     actualizarDiasRestantes();
-
-                    calendar.removeAllEvents();
-                    datos.vacaciones.forEach(fecha => {
+        
+                    // 🔥 SOLUCIÓN: Reiniciar eventos en FullCalendar 🔥
+                    calendar.removeAllEvents(); // Eliminar todos los eventos existentes
+        
+                    // Agregar eventos de vacaciones
+                    selecciones.vacaciones.forEach(fecha => {
                         calendar.addEvent({
                             id: fecha,
                             title: "Vacaciones",
@@ -161,8 +167,9 @@
                             className: "vacaciones"
                         });
                     });
-
-                    datos.baja.forEach(fecha => {
+        
+                    // Agregar eventos de bajas médicas
+                    selecciones.baja.forEach(fecha => {
                         calendar.addEvent({
                             id: fecha,
                             title: "Baja Médica",
@@ -171,7 +178,10 @@
                             className: "baja"
                         });
                     });
-
+        
+                    // 🔄 FORZAR RE-RENDER DEL CALENDARIO 🔄
+                    calendar.render();
+        
                 } catch (e) {
                     console.error("Error al procesar mensaje de Thunkable:", e);
                 }
