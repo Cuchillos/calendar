@@ -60,6 +60,21 @@
             max-width: 900px;
             margin: auto;
         }
+        
+        /* 🔹 Vacaciones (Fondo Verde) */
+        .fc-daygrid-day.vacaciones {
+            background: rgba(39, 174, 96, 0.25);
+            border: 2px solid #27ae60;
+            box-shadow: 0 3px 8px rgba(39, 174, 96, 0.2);
+        }
+        
+        /* 🔹 Baja Médica (Fondo Naranja) */
+        .fc-daygrid-day.baja {
+            background: rgba(230, 126, 34, 0.25);
+            border: 2px solid #e67e22;
+            box-shadow: 0 3px 8px rgba(230, 126, 34, 0.2);
+        }
+        
     </style>
 </head>
 <body>
@@ -112,6 +127,7 @@
                 }
                 
                 actualizarDiasRestantes();
+                aplicarEstilos();
                 sincronizarConThunkable();
             }
         });
@@ -126,6 +142,24 @@
             });
         });
 
+        function aplicarEstilos() {
+            // 🔥 Limpiar estilos previos
+            document.querySelectorAll('.fc-daygrid-day').forEach(cell => {
+                cell.classList.remove('vacaciones', 'baja');
+            });
+
+            // 🔥 Aplicar clases de estilos a las fechas seleccionadas
+            selecciones.vacaciones.forEach(fecha => {
+                let cell = document.querySelector(`[data-date="${fecha}"]`);
+                if (cell) cell.classList.add('vacaciones');
+            });
+
+            selecciones.baja.forEach(fecha => {
+                let cell = document.querySelector(`[data-date="${fecha}"]`);
+                if (cell) cell.classList.add('baja');
+            });
+        }
+        
         function sincronizarConThunkable() {
             const datos = {
                 nombre: nombreTrabajador,
@@ -143,45 +177,15 @@
             ThunkableWebviewerExtension.receiveMessage(function (message) {
                 try {
                     const datos = JSON.parse(message);
-        
-                    // Actualizar variables globales
                     nombreTrabajador = datos.nombre || "Trabajador";
                     diasVacacionesRestantes = datos.diasRestantes || 30;
                     selecciones.vacaciones = new Set(datos.vacaciones || []);
                     selecciones.baja = new Set(datos.baja || []);
-        
-                    // Actualizar interfaz de usuario
+
                     document.getElementById('nombreTrabajador').textContent = `Bienvenido, ${nombreTrabajador}`;
                     actualizarDiasRestantes();
-        
-                    // 🔥 SOLUCIÓN: Reiniciar eventos en FullCalendar 🔥
-                    calendar.removeAllEvents(); // Eliminar todos los eventos existentes
-        
-                    // Agregar eventos de vacaciones
-                    selecciones.vacaciones.forEach(fecha => {
-                        calendar.addEvent({
-                            id: fecha,
-                            title: "Vacaciones",
-                            start: fecha,
-                            allDay: true,
-                            className: "vacaciones"
-                        });
-                    });
-        
-                    // Agregar eventos de bajas médicas
-                    selecciones.baja.forEach(fecha => {
-                        calendar.addEvent({
-                            id: fecha,
-                            title: "Baja Médica",
-                            start: fecha,
-                            allDay: true,
-                            className: "baja"
-                        });
-                    });
-        
-                    // 🔄 FORZAR RE-RENDER DEL CALENDARIO 🔄
-                    calendar.render();
-        
+                    aplicarEstilos();
+
                 } catch (e) {
                     console.error("Error al procesar mensaje de Thunkable:", e);
                 }
