@@ -68,7 +68,7 @@
     <div class="header">
         <div class="nombre-trabajador" id="nombreTrabajador">Bienvenido, [Nombre]</div>
         <h1>📅 Gestor de Vacaciones</h1>
-        <div>Días restantes: <span id="diasRestantes">30</span></div>
+        <div>Días restantes: <span id="diasRestantes">0</span></div>
     </div>
 
     <div class="control-panel">
@@ -80,7 +80,7 @@
     <script>
         let modoSeleccion = null;
         let selecciones = { vacaciones: new Set() };
-        let diasVacacionesRestantes = 30;
+        let diasVacacionesRestantes = 0;
         let nombreTrabajador = "Trabajador";
 
         const formatDate = (date) => {
