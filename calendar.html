@@ -163,7 +163,7 @@
                 try {
                     const datos = JSON.parse(message);
                     nombreTrabajador = datos.nombre || "Trabajador";
-                    diasVacacionesRestantes = datos.diasRestantes || 30;
+                    diasVacacionesRestantes = datos.diasRestantes || 0;
                     selecciones.vacaciones = new Set(datos.vacaciones || []);
 
                     document.getElementById('nombreTrabajador').textContent = `Bienvenido, ${nombreTrabajador}`;
