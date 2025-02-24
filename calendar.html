@@ -56,8 +56,6 @@
             max-width: 900px;
             margin: auto;
         }
-
-        /* Vacaciones (Fondo Verde) */
         .vacaciones {
             background: rgba(39, 174, 96, 0.25) !important;
             border: 2px solid #27ae60 !important;
@@ -82,10 +80,11 @@
         let selecciones = { vacaciones: new Set() };
         let diasVacacionesRestantes = 0;
         let nombreTrabajador = "Trabajador";
-        let userStatus = 'worker'; // Estado del usuario (worker/admin)
+        let userStatus = 'worker';
+        let calendar;
 
         const formatDate = (date) => {
-            date.setHours(12, 0, 0, 0); // Normalizar hora
+            date.setHours(12, 0, 0, 0);
             return date.toISOString().split('T')[0];
         };
 
@@ -93,60 +92,58 @@
             document.getElementById('diasRestantes').textContent = diasVacacionesRestantes - selecciones.vacaciones.size;
         }
 
-        const calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
-            initialView: 'dayGridMonth',
-            locale: 'es',
-            firstDay: 1,
-            headerToolbar: {
-                left: 'prev,next today',
-                center: 'title',
-                right: 'dayGridMonth'
-            },
-            dateClick: (info) => {
-                if (!modoSeleccion) return;
-                let fecha = new Date(info.date);
-                fecha.setHours(12, 0, 0, 0);
-                let fechaStr = formatDate(fecha);
+        function inicializarCalendario() {
+            calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
+                initialView: 'dayGridMonth',
+                locale: 'es',
+                firstDay: 1,
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth'
+                },
+                dateClick: (info) => {
+                    if (!modoSeleccion) return;
+                    let fecha = new Date(info.date);
+                    fecha.setHours(12, 0, 0, 0);
+                    let fechaStr = formatDate(fecha);
 
-                let confirmacion = confirm(`¿Deseas marcar como Vacaciones el día ${fechaStr}?`);
-                if (!confirmacion) return;
+                    let confirmacion = confirm(`¿Deseas marcar como Vacaciones el día ${fechaStr}?`);
+                    if (!confirmacion) return;
 
-                if (!selecciones.vacaciones.has(fechaStr)) {
-                    if (selecciones.vacaciones.size >= diasVacacionesRestantes) {
-                        alert(`Límite de ${diasVacacionesRestantes} días alcanzado`);
-                        return;
+                    if (!selecciones.vacaciones.has(fechaStr)) {
+                        if (selecciones.vacaciones.size >= diasVacacionesRestantes) {
+                            alert(`Límite de ${diasVacacionesRestantes} días alcanzado`);
+                            return;
+                        }
+                        selecciones.vacaciones.add(fechaStr);
                     }
-                    selecciones.vacaciones.add(fechaStr);
-                }
 
-                actualizarDiasRestantes();
-                actualizarCalendario();
-                sincronizarConThunkable();
-            },
-            eventClick: (info) => {
-                // Solo admins pueden eliminar fechas
-                if (userStatus !== 'admin') return;
-                
-                const fecha = info.event.start;
-                const fechaStr = formatDate(fecha);
-                
-                const confirmacion = confirm(`¿Deseas eliminar la fecha ${fechaStr} de vacaciones?`);
-                if (confirmacion) {
-                    selecciones.vacaciones.delete(fechaStr);
                     actualizarDiasRestantes();
                     actualizarCalendario();
                     sincronizarConThunkable();
+                },
+                eventClick: (info) => {
+                    if (userStatus !== 'admin') return;
+                    
+                    const fecha = info.event.start;
+                    const fechaStr = formatDate(fecha);
+                    
+                    const confirmacion = confirm(`¿Deseas eliminar la fecha ${fechaStr} de vacaciones?`);
+                    if (confirmacion) {
+                        selecciones.vacaciones.delete(fechaStr);
+                        actualizarDiasRestantes();
+                        actualizarCalendario();
+                        sincronizarConThunkable();
+                    }
+                    info.jsEvent.preventDefault();
+                },
+                datesSet: () => {
+                    calendar.updateSize();
                 }
-                info.jsEvent.preventDefault();
-            }
-
-            datesSet: () => {
-                // Nuevo: Forzar actualización del DOM del calendario
-                setTimeout(() => calendar.updateSize(), 50);
-            }
-        });
-
-        calendar.render();
+            });
+            calendar.render();
+        }
 
         document.getElementById('vacacionesBtn').addEventListener('click', () => {
             modoSeleccion = "vacaciones";
@@ -162,10 +159,7 @@
                     className: "vacaciones"
                 });
             });
-            setTimeout(() => {
-                calendar.updateSize();
-                calendar.render();
-            }, 100);
+            calendar.updateSize();
         }
 
         function sincronizarConThunkable() {
@@ -187,19 +181,24 @@
                     nombreTrabajador = datos.nombre || "Trabajador";
                     diasVacacionesRestantes = datos.diasRestantes || 0;
                     selecciones.vacaciones = new Set(datos.vacaciones || []);
-                    userStatus = datos.status || 'worker'; // Recibir estado de usuario
+                    userStatus = datos.status || 'worker';
 
                     document.getElementById('nombreTrabajador').textContent = `Bienvenido, ${nombreTrabajador}`;
                     actualizarDiasRestantes();
-                    setTimeout(() => {
-                        calendar.changeView('dayGridMonth');
+                    
+                    if (!calendar) {
+                        inicializarCalendario();
+                    } else {
                         actualizarCalendario();
-                    }, 200);
+                    }
                 } catch (e) {
                     console.error("Error al procesar mensaje de Thunkable:", e);
                 }
             });
         }
+
+        // Inicialización inicial del calendario
+        window.addEventListener('DOMContentLoaded', inicializarCalendario);
     </script>
 </body>
 </html>
