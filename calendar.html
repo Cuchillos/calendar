@@ -139,6 +139,11 @@
                 }
                 info.jsEvent.preventDefault();
             }
+
+            datesSet: () => {
+                // Nuevo: Forzar actualización del DOM del calendario
+                setTimeout(() => calendar.updateSize(), 50);
+            }
         });
 
         calendar.render();
@@ -157,6 +162,10 @@
                     className: "vacaciones"
                 });
             });
+            setTimeout(() => {
+                calendar.updateSize();
+                calendar.render();
+            }, 100);
         }
 
         function sincronizarConThunkable() {
@@ -182,7 +191,10 @@
 
                     document.getElementById('nombreTrabajador').textContent = `Bienvenido, ${nombreTrabajador}`;
                     actualizarDiasRestantes();
-                    actualizarCalendario();
+                    setTimeout(() => {
+                        calendar.changeView('dayGridMonth');
+                        actualizarCalendario();
+                    }, 200);
                 } catch (e) {
                     console.error("Error al procesar mensaje de Thunkable:", e);
                 }
